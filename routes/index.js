@@ -8,6 +8,7 @@ router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 });
 
+router.get('/users', userController.get_all_user);
 router.post('/user', userController.create_user);
 
 router.get('/all', itemController.get_all);
