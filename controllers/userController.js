@@ -2,6 +2,8 @@ const db = require('../connectDB');
 const { body, check, validationResult } = require('express-validator');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
+const passport = require('passport');
+const jwt = require('jsonwebtoken');
 
 exports.get_all_user = (req, res, next) => {
     const sql = 'SELECT * FROM users';
@@ -61,4 +63,42 @@ exports.create_user = [
             });
         }
     }
+]
+
+exports.log_in = async (req, res, next) => {
+    passport.authenticate('local', {session: false}, (err, user, info) => {
+        if (err || !user)
+            return next(new Error(info.message));
+        req.login(user, {session: false}, err => {
+            if (err)
+                return next(err);
+            const token = jwt.sign({user}, process.env.S_KEY);
+            res.send({token, user});
+        });
+    })(req, res, next);
+}
+
+exports.edit_user = [
+    body('username', "Username must be longer than 4 letter").trim().isLength({min: 4}).escape(),
+    check('username').custom(value => {
+        return new Promise((resolve, reject) => {
+            const sql = `SELECT * FROM users WHERE name = '${value}'`;
+            db.db_query(sql, (err, result) => {
+                if (result && result.length > 0)
+                    reject('username already exists');
+                resolve(true);
+            });
+        })
+    }),
+    body('email', "Please enter an email address").normalizeEmail().isEmail().escape(),
+    check('email').custom(value => {
+        return new Promise((resolve, reject) => {
+            const sql = `SELECT * FROM users WHERE email = '${value}'`;
+            db.db_query(sql, (err, result) => {
+                if (result && result.length > 0)
+                    reject('email already exists');
+                resolve(true);
+            });
+        })
+    }),
 ]
