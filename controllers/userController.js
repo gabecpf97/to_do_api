@@ -54,11 +54,18 @@ exports.create_user = [
             bcrypt.hash(req.body.password, 10, (err, hashedPassword) => {
                 if (err)
                     return next(err);
-                const sql = `INSERT INTO users (id, name, email, password) VALUES ('${id}', '${req.body.username}', '${req.body.email}', '${hashedPassword}')`;
+                const sql = `INSERT INTO users (id, username, email, password) VALUES ('${id}', '${req.body.username}', '${req.body.email}', '${hashedPassword}')`;
                 db.db_query(sql, (err, result) => {
                     if (err)
                         return next(err);
-                    res.send({result});
+                    const user = {
+                        id,
+                        username: req.body.username,
+                        email: req.body.email,
+                        password: hashedPassword
+                    }
+                    const token = jwt.sign({user}, process.env.S_KEY);
+                    res.send({token, user});
                 });
             });
         }
@@ -80,25 +87,41 @@ exports.log_in = async (req, res, next) => {
 
 exports.edit_user = [
     body('username', "Username must be longer than 4 letter").trim().isLength({min: 4}).escape(),
-    check('username').custom(value => {
+    check('username').custom((value, { req }) => {
         return new Promise((resolve, reject) => {
             const sql = `SELECT * FROM users WHERE name = '${value}'`;
             db.db_query(sql, (err, result) => {
-                if (result && result.length > 0)
+                if (result && result.length > 0 && result[0].id !== req.user.id)
                     reject('username already exists');
                 resolve(true);
             });
         })
     }),
     body('email', "Please enter an email address").normalizeEmail().isEmail().escape(),
-    check('email').custom(value => {
+    check('email').custom((value, { req }) => {
         return new Promise((resolve, reject) => {
             const sql = `SELECT * FROM users WHERE email = '${value}'`;
             db.db_query(sql, (err, result) => {
-                if (result && result.length > 0)
+                if (result && result.length > 0 && result[0].id !== req.user.id)
                     reject('email already exists');
                 resolve(true);
             });
         })
     }),
+    (req, res, next) => {
+        if (req.params.id === req.user.id) {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return next({errors: errors.array()});
+            } else {
+                const updates = `username = '${req.body.username}', email = '${req.body.email}'`;
+                const sql = `UPDATE users SET ${updates} where id = '${req.params.id}'`;
+                db.db_query(sql, (err, result) => {
+                    if (err)
+                        return next(err);
+                    res.send({success: true});
+                });
+            }
+        }
+    }
 ]
