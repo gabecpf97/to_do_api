@@ -51,3 +51,37 @@ exports.create_item = [
         }
     }
 ]
+
+exports.edit_item = [
+    body('title', "Title must not be empty").trim().isLength({min: 1}).escape(),
+    body('message').trim().escape(),
+    check('priority', "Please select value from form").custom(value => {
+        return (value > -1 && value < 4);
+    }),
+    (req, res, next) => {
+        const item_sql = `SELECT * FROM items WHERE id = '${req.params.id}'`;
+        db.db_query(item_sql, (err, theItem) => {
+            if (err)
+                return next(err);
+            if (theItem.length < 1) {
+                return next(new Error('No such item'));
+            } else {
+                const errors = validationResult(req);
+                if (!errors.isEmpty()) {
+                    res.send({errors: errors.array()});
+                } else {
+                    const sql = `UPDATE items SET 
+                                title = '${req.body.title}',
+                                message = '${req.body.message}',
+                                priority = '${req.body.priority}'
+                                WHERE id = '${req.params.id}'`;
+                    db.db_query(sql, (err, result) => {
+                        if (err)
+                            return next(err);
+                        res.send({success: true});
+                    });
+                }
+            }
+        });
+    }
+]
