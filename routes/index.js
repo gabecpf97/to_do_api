@@ -17,6 +17,11 @@ router.post('/signin', userController.create_user);
 router.post('/login', userController.log_in);
 router.put('/user/:id', auth, userController.edit_user);
 
+// list api calls
+router.get('/lists', auth, listController.get_user_lists);
+router.post('/list', auth, listController.create_list);
+router.put('/list/:id', auth, listController.edit_list);
+
 // item api calls
 router.get('/all', itemController.get_all);
 

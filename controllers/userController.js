@@ -64,8 +64,15 @@ exports.create_user = [
                         email: req.body.email,
                         password: hashedPassword
                     }
-                    const token = jwt.sign({user}, process.env.S_KEY);
-                    res.send({token, user});
+                    const list_id = crypto.randomBytes(16).toString('hex');
+                    const values = `'${list_id}', '${id}', 'default'`;
+                    const list_sql = `INSERT INTO lists (id, belong, name) VALUES(${values})`;
+                    db.db_query(list_sql, (err, listResult) => {
+                        if (err)
+                            return next(err);
+                        const token = jwt.sign({user}, process.env.S_KEY);
+                        res.send({token, user});
+                    })
                 });
             });
         }
