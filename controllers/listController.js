@@ -9,14 +9,7 @@ exports.get_user_lists = (req, res, next) => {
     db.db_query(sql, (err, result) => {
         if (err)
             return next(err);
-        async.map(result, (list, callback) => {
-            const itemSql = `SELECT * FROM items WHERE belong = "${list.id}" ORDER BY priority DESC, date DESC`;
-            db.db_query(itemSql, callback);
-        }, (err, results) => {
-            if (err)
-                return next(err);
-            res.send({results});
-        });
+        res.send({result});
     })
 }
 
@@ -105,7 +98,12 @@ exports.delete_list = (req, res, next) => {
                 db.db_query(sql, (err, result) => {
                     if (err)
                         return next(err);
-                    res.send({success: true});
+                    const item_sql = `DELETE FROM items WHERE belong = '${req.params.id}'`;
+                    db.db_query(item_sql, (err, done) => {
+                        if (err)
+                            return next(err);
+                        res.send({success: true});
+                    });
                 })
             }
         }
