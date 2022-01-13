@@ -73,7 +73,7 @@ exports.edit_list = [
             db.db_query(list_sql, (err, theList) => {
                 if (err)
                     return next(err);
-                if (!theList) {
+                if (theList.length < 1) {
                     return next(new Error('You dont have such list'));
                 } else {
                     const id = crypto.randomBytes(16).toString('hex');
@@ -88,3 +88,26 @@ exports.edit_list = [
         }
     }
 ]
+
+exports.delete_list = (req, res, next) => {
+    const list_sql = `SELECT * FROM lists WHERE id = '${req.params.id}'`;
+    db.db_query(list_sql, (err, theList) => {
+        if (err)
+            return next(err);
+        if (theList.length < 1) {
+            return next(new Error('No such list'));
+        } else {
+            const it_belong = theList[0].belong;
+            if (it_belong !== req.user.id) {
+                return next(new Error('Not authorize to delete this post'));
+            } else {
+                const sql = `DELETE FROM lists WHERE id = "${req.params.id}"`;
+                db.db_query(sql, (err, result) => {
+                    if (err)
+                        return next(err);
+                    res.send({success: true});
+                })
+            }
+        }
+    })
+}

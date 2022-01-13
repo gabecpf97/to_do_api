@@ -21,6 +21,7 @@ router.put('/user/:id', auth, userController.edit_user);
 router.get('/lists', auth, listController.get_user_lists);
 router.post('/list', auth, listController.create_list);
 router.put('/list/:id', auth, listController.edit_list);
+router.delete('/list/:id', auth, listController.delete_list);
 
 // item api calls
 router.get('/all', itemController.get_all);
