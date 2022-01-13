@@ -132,3 +132,65 @@ exports.edit_user = [
         }
     }
 ]
+
+exports.change_password = [
+    body('password').trim().escape(),
+    check('password').custom((value, { req }) => {
+        return new Promise((resolve, reject) => {
+            bcrypt.compare(value, req.user.password, (err, result) => {
+                if (err || !result)
+                    return reject('Incorrect password');
+                return resolve(true);
+            });
+        });
+    }),
+    check('new_password').trim().isLength({min: 6}).escape()
+    .withMessage('Passowrd must be longer than 6 letter').custom(value => {
+        return (/\d/.test(value));
+    }).withMessage('Password must inclue numbers'),
+    check('confirm_password', 'Please enter the same password again').custom((value, { req }) => {
+        return value === req.body.new_password;
+    }),
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            res.send({errors: errors.array()});
+        } else {
+            bcrypt.hash(req.body.new_password, 10, (err, hashedPassword) => {
+                if (err)
+                    return next(err);
+                const sql = `UPDATE users SET password = '${hashedPassword}' WHERE id = '${req.user.id}'`;
+                db.db_query(sql, (err, result) => {
+                    if (err)
+                        return next(err);
+                    res.send({success: true});
+                })
+            });
+        }
+    }
+]
+
+exports.delete_user = [
+    check('password').custom((value, { req }) => {
+        return new Promise((resolve, reject) => {
+            bcrypt.compare(value, req.user.password, (err, result) => {
+                if (err || !result)
+                    return reject('Incorrect password');
+                return resolve(true);
+            });
+        });
+    }),
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            res.send({erros: errors.array()});
+        } else {
+            const sql = `DELETE FROM users WHERE id = '${req.user.id}'`;
+            db.db_query(sql, (err, result) => {
+                if (err)
+                    return next(err);
+                res.send({success: true});
+            })
+        }
+    }
+]

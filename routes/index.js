@@ -8,13 +8,15 @@ const listController = require('../controllers/listController');
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
+  res.render('index', { title: 'This is backend' });
 });
 
 // user api calls
 router.get('/users', userController.get_all_user);
-router.post('/signin', userController.create_user);
+router.post('/signup', userController.create_user);
 router.post('/login', userController.log_in);
+router.put('/user/password', auth, userController.change_password);
+router.delete('/user', auth, userController.delete_user);
 router.put('/user/:id', auth, userController.edit_user);
 
 // list api calls
