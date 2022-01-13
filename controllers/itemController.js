@@ -1,15 +1,14 @@
 const db = require('../connectDB');
+const { body, check, validationResult } = require('express-validator');
+const async = require('async');
+const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 
-exports.get_all = (req, res, next) => {
-    // db.db_connect.getConnection((err, connect) => {
-    //     if (err)
-    //         return next(err);
-        const sql = 'SELECT * FROM items';
-    //     connect.query(sql, (err, result) => {
-    //         if (err)
-    //             return next(err);
-    //         res.send({result});
-    //     })
-    // });
-    res.send({result: db.db_query(sql, next)});
+exports.get_from_list = (req, res, next) => {
+    const item_sql = `SELECT * FROM items WHERE belong = '${req.params.id}'`;
+    db.db_query(item_sql, (err, itemList) => {
+        if (err)
+            return next(err);
+        res.send({itemList});
+    })
 }
