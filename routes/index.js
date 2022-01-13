@@ -25,5 +25,6 @@ router.delete('/list/:id', auth, listController.delete_list);
 
 // item api calls
 router.get('/all_item/:id', itemController.get_from_list);
+router.post('/item', auth, itemController.create_item);
 
 module.exports = router;
