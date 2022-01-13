@@ -24,10 +24,11 @@ router.put('/list/:id', auth, listController.edit_list);
 router.delete('/list/:id', auth, listController.delete_list);
 
 // item api calls
-router.get('/all_item/:id', itemController.get_from_list);
+router.get('/all_item/:id', auth, itemController.get_from_list);
 router.post('/item', auth, itemController.create_item);
 router.put('/item/:id', auth, itemController.edit_item);
 router.put('/item/:id/priority', auth, itemController.change_priority);
 router.put('/item/:id/status', auth, itemController.change_status);
+router.delete('/item/:id', auth, itemController.delete_item);
 
 module.exports = router;
