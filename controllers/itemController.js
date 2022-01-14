@@ -5,12 +5,22 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 
 exports.get_from_list = (req, res, next) => {
-    const item_sql = `SELECT * FROM items WHERE belong = '${req.params.id}'`;
+    const item_sql = `SELECT id FROM items WHERE belong = '${req.params.id}'
+                        ORDER BY priority DESC, date DESC`;
     db.db_query(item_sql, (err, itemList) => {
         if (err)
             return next(err);
         res.send({itemList});
     });
+}
+
+exports.get_item = (req, res, next) => {
+    const item_sql = `SELECT * FROM items WHERE id = '${req.params.id}'`;
+    db.db_query(item_sql, (err, result) => {
+        if (err)
+            return next(err);
+        res.send({result});
+    })
 }
 
 exports.create_item = [

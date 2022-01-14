@@ -10,6 +10,7 @@
     "async": "^3.2.3",
     "bcrypt": "^5.0.1",
     "cookie-parser": "~1.4.4",
+    "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "debug": "~2.6.9",
     "dotenv": "^11.0.0",

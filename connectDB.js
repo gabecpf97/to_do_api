@@ -18,6 +18,7 @@ exports.db_query = (sql, callback) => {
             if (err)
                 return callback(err);
             callback(null, result);
+            connect.release();
         })
     })
 }

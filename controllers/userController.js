@@ -40,8 +40,8 @@ exports.create_user = [
     }),
     check('password').trim().isLength({min: 6}).escape()
     .withMessage('Passowrd must be longer than 6 letter').custom(value => {
-        return (/\d/.test(value));
-    }).withMessage('Password must inclue numbers'),
+        return (/\d/.test(value) && /\D/.test(value));
+    }).withMessage('Password must inclue numbers and letters'),
     check('confirm_password', 'Please enter the same password again').custom((value, { req }) => {
         return value === req.body.password;
     }),
@@ -79,18 +79,27 @@ exports.create_user = [
     }
 ]
 
-exports.log_in = async (req, res, next) => {
-    passport.authenticate('local', {session: false}, (err, user, info) => {
-        if (err || !user)
-            return next(new Error(info.message));
-        req.login(user, {session: false}, err => {
-            if (err)
-                return next(err);
-            const token = jwt.sign({user}, process.env.S_KEY);
-            res.send({token, user});
-        });
-    })(req, res, next);
-}
+exports.log_in = [
+    body('email', "Please enter an email address").trim().normalizeEmail().isEmail().escape(),
+    body('password').trim().escape(),
+    async (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            res.send({errors: errors.array()});
+        } else {
+            passport.authenticate('local', {session: false}, (err, user, info) => {
+                if (err || !user)
+                    return next(err || new Error(info.message));
+                req.login(user, {session: false}, err => {
+                    if (err)
+                        return next(err);
+                    const token = jwt.sign({user}, process.env.S_KEY);
+                    res.send({token, user});
+                });
+            })(req, res, next);
+        }
+    }   
+]
 
 exports.edit_user = [
     body('username', "Username must be longer than 4 letter").trim().isLength({min: 4}).escape(),
