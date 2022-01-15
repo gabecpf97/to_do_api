@@ -126,35 +126,31 @@ exports.change_priority = [
     }
 ]
 
-exports.change_status = [
-    check('status', "Please select from form").custom(value => {
-        return (value < 2 && value > -1);
-    }),
-    (req, res, next) => {
-        const item_sql = `SELECT * FROM items WHERE id = '${req.params.id}'`;
-        db.db_query(item_sql, (err, theItem) => {
-            if (err)
-                return next(err);
-            if (theItem.length < 1) {
-                return next(new Error('No such item'));
+exports.change_status = (req, res, next) => {
+    const item_sql = `SELECT * FROM items WHERE id = '${req.params.id}'`;
+    db.db_query(item_sql, (err, theItem) => {
+        if (err)
+            return next(err);
+        if (theItem.length < 1) {
+            return next(new Error('No such item'));
+        } else {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                res.send({errors: errors.array()});
             } else {
-                const errors = validationResult(req);
-                if (!errors.isEmpty()) {
-                    res.send({errors: errors.array()});
-                } else {
-                    const sql = `UPDATE items SET 
-                                status = '${req.body.status}'
-                                WHERE id = '${req.params.id}'`;
-                    db.db_query(sql, (err, result) => {
-                        if (err)
-                            return next(err);
-                        res.send({success: true});
-                    });
-                }
+                const new_status = theItem[0].status ? '0' : '1';
+                const sql = `UPDATE items SET 
+                            status = '${new_status}'
+                            WHERE id = '${req.params.id}'`;
+                db.db_query(sql, (err, result) => {
+                    if (err)
+                        return next(err);
+                    res.send({success: true});
+                });
             }
-        });
-    }
-]
+        }
+    });
+}
 
 exports.delete_item = (req, res, next) => {
     const item_sql = `SELECT * FROM items WHERE id = '${req.params.id}'`;
