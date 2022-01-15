@@ -29,6 +29,7 @@ exports.create_item = [
     check('priority', "Please select value from form").custom(value => {
         return (value > -1 && value < 4);
     }),
+    body('due_date', "Please enter an date").isDate().escape(),
     (req, res, next) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -40,10 +41,11 @@ exports.create_item = [
                 title: req.body.title,
                 message: req.body.message,
                 date: new Date().toISOString().slice(0, 19).replace('T', ' '),
+                due_date: req.body.due_date,
                 priority: req.body.priority,
                 status: 0,
             };
-            const sql = `INSERT INTO items (id, belong, title, message, date, priority, status)
+            const sql = `INSERT INTO items (id, belong, title, message, date, priority, status, due_date)
                         VALUES (
                             '${item.id}',
                             '${item.belong}',
@@ -51,8 +53,9 @@ exports.create_item = [
                             '${item.message}',
                             '${item.date}',
                             ${item.priority},
-                            ${item.status}
-                        )`.replace(/\n/ig, '');
+                            ${item.status},
+                            '${item.due_date}'
+                        )`;
             db.db_query(sql, (err,result) => {
                 if (err)
                     return next(err);
@@ -68,6 +71,7 @@ exports.edit_item = [
     check('priority', "Please select value from form").custom(value => {
         return (value > -1 && value < 4);
     }),
+    body('due_date', "Please enter an date").isDate().escape(),
     (req, res, next) => {
         const item_sql = `SELECT * FROM items WHERE id = '${req.params.id}'`;
         db.db_query(item_sql, (err, theItem) => {
@@ -83,7 +87,8 @@ exports.edit_item = [
                     const sql = `UPDATE items SET 
                                 title = '${req.body.title}',
                                 message = '${req.body.message}',
-                                priority = '${req.body.priority}'
+                                priority = '${req.body.priority}',
+                                due_date = '${req.body.due_date}'
                                 WHERE id = '${req.params.id}'`;
                     db.db_query(sql, (err, result) => {
                         if (err)
